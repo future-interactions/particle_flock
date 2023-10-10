@@ -1,7 +1,7 @@
 
 
 let flock;
-let pCount = 40;//particle count
+let pCount = 30;//particle count
 let pCountX, pCountY;
 let pSize = 10; //particle size
 let pSeparation = 1.0;
@@ -27,6 +27,9 @@ resetSketch();
 function draw() {
   background(0);
   pSize = ballSizeSlider.value();
+  pCount = ballCountSlider.value();
+  pCountX = pCount;
+  pCountY = pCount/16*9;
   flock.run();
 
   // console.log(pSize);
@@ -263,7 +266,7 @@ function keyPressed() {
     }
     // console.log(simGo);
   }
-if (keyCode == LEFT_ARROW){
+if (keyCode ===82){
   resetSketch();
 }
 
@@ -283,11 +286,11 @@ function drawInterface() {
   ballSizeText.style('color', '#ffffff');
   ballSizeText.position(16, 36);
 
-  // ballCountSlider = createSlider(1, 40, 10);
-  // ballCountSlider.position(200, 16);
-  // ballCountSlider.style('width', '160px');
+  ballCountSlider = createSlider(1, 50, 30);
+  ballCountSlider.position(200, 16);
+  ballCountSlider.style('width', '160px');
 
-  // let ballCountText = createElement('desc', 'Particle Count');
-  // ballCountText.style('color', '#ffffff');
-  // ballCountText.position(206, 36);
+  let ballCountText = createElement('desc', 'Particle Count');
+  ballCountText.style('color', '#ffffff');
+  ballCountText.position(206, 36);
 }
