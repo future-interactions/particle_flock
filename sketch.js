@@ -20,15 +20,7 @@ function setup() {
   // createP("Drag the mouse to generate new boids.");
   pCountX = pCount;
   pCountY = pCount / 16 * 9;
-  flock = new Flock();
-  // Add an initial set of boids into the system
-  for (let i = 0; i < pCount + 1; i++) {
-    for (let j = 0; j < pCountY + 1; j++) {
-
-      let b = new Boid(map(i, 0, pCount, 0, width), map(j, 0, pCountY, 0, height));
-      flock.addBoid(b);
-    }
-  }
+resetSketch();
   drawInterface();
 }
 
@@ -251,6 +243,16 @@ Boid.prototype.cohesion = function (boids) {
   }
 }
 
+function resetSketch(){
+  flock = new Flock();
+  for (let i = 0; i < pCount + 1; i++) {
+    for (let j = 0; j < pCountY + 1; j++) {
+
+      let b = new Boid(map(i, 0, pCount, 0, width), map(j, 0, pCountY, 0, height));
+      flock.addBoid(b);
+    }
+  }
+}
 
 function keyPressed() {
   if (keyCode == RETURN) {
@@ -261,7 +263,9 @@ function keyPressed() {
     }
     // console.log(simGo);
   }
-
+if (keyCode == LEFT_ARROW){
+  resetSketch();
+}
 
 }
 
