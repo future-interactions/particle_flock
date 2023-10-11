@@ -1,14 +1,15 @@
 
 
 let flock;
-let pCount = 30;//particle count
-let pCountX, pCountY;
-let pSize = 10; //particle size
+let pCount = 0;//particle count
+let pCountX = 40;
+let pCountY;
+let pSize = 50; //particle size
 let pSeparation = 1.0;
-let simGo = false;
+let simGo = true;
 let DMSans, suisseMono;
 let ballSizeSlider, ballCountSlider;
-
+let xOffset=0;
 function preload() {
   DMSans = loadFont('assets/DMSans-Medium.ttf');
   suisseMono = loadFont('assets/SuisseIntlMono-Regular.otf');
@@ -16,20 +17,23 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(1920 / 2, 1080 / 2);
+  createCanvas(1920, 1080);
   // createP("Drag the mouse to generate new boids.");
   pCountX = pCount;
-  pCountY = pCount / 16 * 9;
-resetSketch();
-  drawInterface();
+  pCountY = pCount * (height / width);
+  resetSketch();
+ // drawInterface();
+  colorMode(RGBA);
 }
 
 function draw() {
-  background(0);
-  pSize = ballSizeSlider.value();
-  pCount = ballCountSlider.value();
+  fill(0, 10);
+  rect(0, 0, width, height);
+  //background(0);
+  // pSize = ballSizeSlider.value();
+  // pCount = ballCountSlider.value();
   pCountX = pCount;
-  pCountY = pCount/16*9;
+  pCountY = pCount * (height / width);
   flock.run();
 
   // console.log(pSize);
@@ -141,7 +145,10 @@ Boid.prototype.seek = function (target) {
 Boid.prototype.render = function () {
   // Draw a triangle rotated in the direction of velocity
   //let theta = this.velocity.heading() + radians(90);
-  fill(255);
+
+  fill(200, 255, 100);
+  console.log();
+
   noStroke();
   //stroke(200);
   push();
@@ -153,7 +160,13 @@ Boid.prototype.render = function () {
   // vertex(this.r, this.r * 2);
   // endShape(CLOSE);
   ellipse(0, 0, -this.r * 2);
-  pop();
+  fill(255);
+  ellipse(-this.r/3, -this.r/3, -this.r / 2);
+  ellipse(+this.r/3, -this.r/3, -this.r / 2);
+  fill(0);
+  ellipse(-this.r / 3, -this.r / 3, -this.r / 8);
+  ellipse(+this.r / 3, -this.r / 3, -this.r / 8);
+    pop();
 }
 
 // Wraparound
@@ -202,7 +215,7 @@ Boid.prototype.separate = function (boids) {
 // Alignment
 // For every nearby boid in the system, calculate the average velocity
 Boid.prototype.align = function (boids) {
-  let neighbordist = 50;
+  let neighbordist = pSize * 10;
   let sum = createVector(0, 0);
   let count = 0;
   for (let i = 0; i < boids.length; i++) {
@@ -227,14 +240,14 @@ Boid.prototype.align = function (boids) {
 // Cohesion
 // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
 Boid.prototype.cohesion = function (boids) {
-  let neighbordist = 50;
+  let neighbordist = pSize * 10;
   let sum = createVector(0, 0);   // Start with empty vector to accumulate all locations
   let count = 0;
   for (let i = 0; i < boids.length; i++) {
     let d = p5.Vector.dist(this.position, boids[i].position);
     if ((d > 0) && (d < neighbordist)) {
       sum.add(boids[i].position); // Add location
-    
+
       count++;
     }
   }
@@ -246,12 +259,18 @@ Boid.prototype.cohesion = function (boids) {
   }
 }
 
-function resetSketch(){
+function resetSketch() {
   flock = new Flock();
   for (let i = 0; i < pCount + 1; i++) {
     for (let j = 0; j < pCountY + 1; j++) {
+      if (j%2==0) {
+         xOffset = -100;
+        console.log("even");
+      }else{
+        xOffset=0;
+      }
+      let b = new Boid(map(i, 0, pCount, 0-xOffset, width-xOffset), map(j, 0, pCountY, 0, height));
 
-      let b = new Boid(map(i, 0, pCount, 0, width), map(j, 0, pCountY, 0, height));
       flock.addBoid(b);
     }
   }
@@ -266,9 +285,9 @@ function keyPressed() {
     }
     // console.log(simGo);
   }
-if (keyCode ===82){
-  resetSketch();
-}
+  if (keyCode === 82) {
+    resetSketch();
+  }
 
 }
 
@@ -277,7 +296,7 @@ if (keyCode ===82){
 
 function drawInterface() {
   textFont(DMSans);
-  ballSizeSlider = createSlider(1, 50, 10);
+  ballSizeSlider = createSlider(1, 100, 50);
   ballSizeSlider.position(10, 16);
   ballSizeSlider.style('width', '160px');
 
@@ -286,7 +305,7 @@ function drawInterface() {
   ballSizeText.style('color', '#ffffff');
   ballSizeText.position(16, 36);
 
-  ballCountSlider = createSlider(1, 50, 30);
+  ballCountSlider = createSlider(0, 50, 12);
   ballCountSlider.position(200, 16);
   ballCountSlider.style('width', '160px');
 
