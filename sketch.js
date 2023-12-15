@@ -5,11 +5,13 @@ let pCount = 0;//particle count
 let pCountX = 40;
 let pCountY;
 let pSize = 50; //particle size
-let pSeparation = 1.0;
+let pSeparation = 10;
 let simGo = true;
 let DMSans, suisseMono;
 let ballSizeSlider, ballCountSlider;
-let xOffset=0;
+let xOffset = 0;
+let saveCalled = false;
+let frameCount = 0;
 function preload() {
   DMSans = loadFont('assets/DMSans-Medium.ttf');
   suisseMono = loadFont('assets/SuisseIntlMono-Regular.otf');
@@ -17,27 +19,31 @@ function preload() {
 }
 
 function setup() {
-  createCanvas(1920, 1080);
-  // createP("Drag the mouse to generate new boids.");
+  createCanvas(windowWidth, windowHeight);
+  pixelDensity(1);
   pCountX = pCount;
   pCountY = pCount * (height / width);
   resetSketch();
- // drawInterface();
+  // drawInterface();
   colorMode(RGBA);
 }
 
 function draw() {
-  fill(0, 10);
-  rect(0, 0, width, height);
-  //background(0);
+background(0,200,0,10);
   // pSize = ballSizeSlider.value();
   // pCount = ballCountSlider.value();
+  pSize = 200;
+  pCount = 20;
   pCountX = pCount;
   pCountY = pCount * (height / width);
   flock.run();
 
   // console.log(pSize);
-
+  // if (saveCalled && frameCount < 2400) {
+  //   frameRate(5);
+  //   saveCanvas('test-output' + frameCount, 'png');
+  // frameCount++;
+  // }
 }
 
 // Add a new boid into the System
@@ -45,7 +51,7 @@ function mouseDragged() {
   flock.addBoid(new Boid(mouseX, mouseY));
 }
 
-// The Nature of Code
+// Approach modified from The Nature of Code
 // Daniel Shiffman
 // http://natureofcode.com
 
@@ -70,9 +76,6 @@ Flock.prototype.addBoid = function (b) {
   this.boids.push(b);
 }
 
-// The Nature of Code
-// Daniel Shiffman
-// http://natureofcode.com
 
 // Boid class
 // Methods for Separation, Cohesion, Alignment added
@@ -82,8 +85,8 @@ function Boid(x, y) {
   this.velocity = createVector(random(-1, 1), random(-1, 1));
   this.position = createVector(x, y);
   this.r = pSize / 2;
-  this.maxspeed = 3;    // Maximum speed
-  this.maxforce = 0.05; // Maximum steering force
+  this.maxspeed = 5;    // Maximum speed
+  this.maxforce = 0.2; // Maximum steering force
 }
 
 Boid.prototype.run = function (boids) {
@@ -107,7 +110,7 @@ Boid.prototype.flock = function (boids) {
   let coh = this.cohesion(boids);   // Cohesion
   // Arbitrarily weight these forces
   sep.mult(1.5);
-  ali.mult(1.0);
+  ali.mult(1.5);
   coh.mult(1.0);
   // Add the force vectors to acceleration
   this.applyForce(sep);
@@ -143,30 +146,32 @@ Boid.prototype.seek = function (target) {
 }
 
 Boid.prototype.render = function () {
-  // Draw a triangle rotated in the direction of velocity
-  //let theta = this.velocity.heading() + radians(90);
-
-  fill(200, 255, 100);
-  console.log();
-
+  fill(255,0, 0);
   noStroke();
-  //stroke(200);
   push();
   translate(this.position.x, this.position.y);
-  // rotate(theta);
-  // beginShape();
-  // vertex(0, -this.r * 2);
-  // vertex(-this.r, this.r * 2);
-  // vertex(this.r, this.r * 2);
-  // endShape(CLOSE);
-  ellipse(0, 0, -this.r * 2);
+  ellipse(0, 0, -this.r / 2);
+  pop();
   fill(255);
-  ellipse(-this.r/3, -this.r/3, -this.r / 2);
-  ellipse(+this.r/3, -this.r/3, -this.r / 2);
+  noStroke();
+  push();
+  translate(this.position.x-pSize*0.05, this.position.y-pSize*0.01);
+  ellipse(0, 0, -this.r * 0.175);
+  pop();
+  push();
+  translate(this.position.x+pSize*0.05, this.position.y-pSize*0.01);
+  ellipse(0, 0, -this.r * 0.175);
+  pop();
   fill(0);
-  ellipse(-this.r / 3, -this.r / 3, -this.r / 8);
-  ellipse(+this.r / 3, -this.r / 3, -this.r / 8);
-    pop();
+  noStroke();
+  push();
+  translate(this.position.x-pSize*0.05, this.position.y-pSize*0.01);
+  ellipse(0, 0, -this.r * 0.05);
+  pop();
+  push();
+  translate(this.position.x+pSize*0.05, this.position.y-pSize*0.01);
+  ellipse(0, 0, -this.r * 0.05);
+  pop();
 }
 
 // Wraparound
@@ -180,7 +185,7 @@ Boid.prototype.borders = function () {
 // Separation
 // Method checks for nearby boids and steers away
 Boid.prototype.separate = function (boids) {
-  let desiredseparation = pSize * 2;
+  let desiredseparation = pSize * 10;
   let steer = createVector(0, 0);
   let count = 0;
   // For every boid in the system, check if it's too close
@@ -215,7 +220,7 @@ Boid.prototype.separate = function (boids) {
 // Alignment
 // For every nearby boid in the system, calculate the average velocity
 Boid.prototype.align = function (boids) {
-  let neighbordist = pSize * 10;
+  let neighbordist = pSize * 5;
   let sum = createVector(0, 0);
   let count = 0;
   for (let i = 0; i < boids.length; i++) {
@@ -240,7 +245,7 @@ Boid.prototype.align = function (boids) {
 // Cohesion
 // For the average location (i.e. center) of all nearby boids, calculate steering vector towards that location
 Boid.prototype.cohesion = function (boids) {
-  let neighbordist = pSize * 10;
+  let neighbordist = pSize * 500;
   let sum = createVector(0, 0);   // Start with empty vector to accumulate all locations
   let count = 0;
   for (let i = 0; i < boids.length; i++) {
@@ -263,13 +268,12 @@ function resetSketch() {
   flock = new Flock();
   for (let i = 0; i < pCount + 1; i++) {
     for (let j = 0; j < pCountY + 1; j++) {
-      if (j%2==0) {
-         xOffset = -100;
-        console.log("even");
-      }else{
-        xOffset=0;
+      if (j % 2 == 0) {
+        xOffset = -100;
+      } else {
+        xOffset = 0;
       }
-      let b = new Boid(map(i, 0, pCount, 0-xOffset, width-xOffset), map(j, 0, pCountY, 0, height));
+      let b = new Boid(random(width), random(height));
 
       flock.addBoid(b);
     }
@@ -283,20 +287,20 @@ function keyPressed() {
     } else {
       simGo = true;
     }
-    // console.log(simGo);
   }
   if (keyCode === 82) {
-    resetSketch();
+    // resetSketch();
+  }
+  if (keyCode === 83 && !saveCalled) {
+    saveCalled = true;
   }
 
 }
 
 
-
-
 function drawInterface() {
   textFont(DMSans);
-  ballSizeSlider = createSlider(1, 100, 50);
+  ballSizeSlider = createSlider(1, 200, 50);
   ballSizeSlider.position(10, 16);
   ballSizeSlider.style('width', '160px');
 
@@ -305,11 +309,15 @@ function drawInterface() {
   ballSizeText.style('color', '#ffffff');
   ballSizeText.position(16, 36);
 
-  ballCountSlider = createSlider(0, 50, 12);
+  ballCountSlider = createSlider(0, 70, 12);
   ballCountSlider.position(200, 16);
   ballCountSlider.style('width', '160px');
 
   let ballCountText = createElement('desc', 'Particle Count');
   ballCountText.style('color', '#ffffff');
   ballCountText.position(206, 36);
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
